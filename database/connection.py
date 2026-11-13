@@ -8,12 +8,4 @@ if not MONGO_URI:
 client = MongoClient(MONGO_URI)
 database = client["mediguide"]
 patients_collection = database["patients"]
-def check_database_connection():
-    try:
-        client.admin.command("ping")
-        print("MongoDB connected successfully!")
-        return True
-
-    except Exception as error:
-        print("MongoDB connection failed:", error)
-        return False
+symptoms_collection = database["symptoms"]
