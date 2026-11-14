@@ -1,43 +1,51 @@
-from fastapi import APIRouter,HTTPException
-from SCHEMA.symptom_schema import *
-from database.connection import symptoms_collection
-from bson import ObjectId
-path2=APIRouter()
+
+from fastapi import APIRouter, HTTPException
+
+from SCHEMA.symptom_schema import symtomsinfo
+
+from model.symptom_model import (
+    create_symptom,
+    get_patient_symptoms
+)
+
+path2 = APIRouter()
+
+
+# POST - SUBMIT SYMPTOMS
 @path2.post("/symptoms/submit")
-def symtoms_post(symtom:symtomsinfo):
-    symtom_data=symtom.model_dump()
+def symtoms_post(symtom: symtomsinfo):
+
+    symtom_data = symtom.model_dump()
+
     try:
-        result = symptoms_collection.insert_one(dict(symtom_data))
+        symptom_id = create_symptom(symtom_data)
+
         return {
-            "message": "Patient registered successfully",
-            "patient_id": str(result.inserted_id),
-            "symtoms": symtom_data
+            "message": "Patient symptoms registered successfully",
+            "patient_id": symtom_data["patient_id"],
+            "symptom_id": symptom_id,
+            "symptoms": symtom_data
         }
 
     except Exception:
         raise HTTPException(
             status_code=500,
-            detail="Unable to register patient"
+            detail="Unable to register symptoms"
         )
-@path2.get("/retreive")
-def symtoms_reterve(patient_id: str):
-        if not ObjectId.is_valid(patient_id):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid patient ID"
-            )
-        p_history = list(symptoms_collection.find({"patient_id": patient_id}))
 
-        if not p_history:
-            raise HTTPException(
+
+@path2.get("/retrieve")
+def symtoms_reterve(patient_id: str):
+
+    p_history = get_patient_symptoms(patient_id)
+
+    if not p_history:
+        raise HTTPException(
             status_code=404,
             detail="No previous symptoms found"
         )
 
-        for record in p_history:
-            record["_id"] = str(record["_id"])
-
-        return {
+    return {
         "patient_id": patient_id,
         "total_records": len(p_history),
         "symptoms_history": p_history
