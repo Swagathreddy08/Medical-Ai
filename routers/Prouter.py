@@ -40,7 +40,7 @@ def create(patient: pcreate):
     except PyMongoError as exc:
         logger.exception("Unable to register patient")
         raise HTTPException(
-            status_code=503,
+            status_code=503, 
             detail="Patient service is temporarily unavailable",
         ) from exc
 
