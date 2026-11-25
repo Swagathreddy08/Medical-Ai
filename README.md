@@ -267,18 +267,18 @@ mediguide-ai/
 The project is being developed incrementally, with each module tested before proceeding to the next.
 
 ### Phase 1 — Backend Foundation
-- [ ] Project setup and virtual environment
-- [ ] FastAPI application structure
+- [x] Project setup and virtual environment
+- [x] FastAPI application structure
 - [x] MongoDB connection
 - [x] Pydantic schema fundamentals
-- [ ] Patient API development
+- [x] Patient API development
 
 ### Phase 2 — Patient Symptom System
-- [ ] Symptom submission endpoint
-- [ ] Input validation
-- [ ] Store symptom sessions
-- [ ] Retrieve patient history
-- [ ] Error handling
+- [x] Symptom submission endpoint
+- [x] Input validation
+- [x] Store symptom sessions
+- [x] Retrieve patient history
+- [x] Error handling
 
 ### Phase 3 — Medical Safety Engine
 - [ ] Rule-based emergency detection

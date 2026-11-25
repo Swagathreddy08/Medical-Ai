@@ -1,71 +1,101 @@
-from fastapi import APIRouter,HTTPException
-from SCHEMA.pcreate_schema import *
-from SCHEMA.symptom_schema import *
-from database.connection import patients_collection
+import logging
+
 from bson import ObjectId
-path=APIRouter()
+from fastapi import APIRouter, HTTPException
+from pymongo.errors import PyMongoError
+
+from SCHEMA.pcreate_schema import pcreate, pupdate
+from database.connection import patients_collection
+
+logger = logging.getLogger(__name__)
+path = APIRouter()
+
 
 @path.get("/profile/{patient_id}")
-async   def get_patient(patient_id: str):
-        if not ObjectId.is_valid(patient_id):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid patient ID"
-            )
-        patient = patients_collection.find_one({
-            "_id": ObjectId(patient_id)
-        })
-        if patient is None:
-            raise HTTPException(
-                status_code=404,
-                detail="Patient not found"
-            )
-        patient["_id"] = str(patient["_id"])
-        return patient
+def get_patient(patient_id: str):
+    if not ObjectId.is_valid(patient_id):
+        raise HTTPException(status_code=400, detail="Invalid patient ID")
+
+    try:
+        patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    except PyMongoError as exc:
+        logger.exception("Unable to retrieve patient profile")
+        raise HTTPException(
+            status_code=503,
+            detail="Patient service is temporarily unavailable",
+        ) from exc
+
+    if patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    patient["_id"] = str(patient["_id"])
+    return patient
+
 
 @path.post("/create")
-async def create(patient: pcreate):
+def create(patient: pcreate):
     patient_data = patient.model_dump()
     try:
-        
-        result = patients_collection.insert_one(dict(patient_data))
-        return {
-            "message": "Patient registered successfully",
-            "patient_id": str(result.inserted_id),
-            "patient": patient_data
-        }
-
-    except Exception:
+        result = patients_collection.insert_one(patient_data)
+    except PyMongoError as exc:
+        logger.exception("Unable to register patient")
         raise HTTPException(
-            status_code=500,
-            detail="Unable to register patient"
-        )
-    
+            status_code=503,
+            detail="Patient service is temporarily unavailable",
+        ) from exc
+
+    return {
+        "message": "Patient registered successfully",
+        "patient_id": str(result.inserted_id),
+        "patient": patient_data,
+    }
+
+
 @path.patch("/profile/{patient_id}")
 def update_patient(patient_id: str, patient: pupdate):
+    if not ObjectId.is_valid(patient_id):
+        raise HTTPException(status_code=400, detail="Invalid patient ID")
 
-    result = patients_collection.update_one(
-        {"_id": ObjectId(patient_id)},
-        {"$set": patient.model_dump()}
-    )
+    updated_data = patient.model_dump(exclude_unset=True)
+    try:
+        result = patients_collection.update_one(
+            {"_id": ObjectId(patient_id)},
+            {"$set": updated_data},
+        )
+    except PyMongoError as exc:
+        logger.exception("Unable to update patient profile")
+        raise HTTPException(
+            status_code=503,
+            detail="Patient service is temporarily unavailable",
+        ) from exc
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
     return {
         "message": "Patient updated successfully",
-        "updated_data": patient.model_dump()
+        "updated_data": updated_data,
     }
+
 
 @path.delete("/delete/{patient_id}")
 def delete_patient(patient_id: str):
-
     if not ObjectId.is_valid(patient_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid Patient ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid patient ID")
 
-    result = patients_collection.delete_one(
-        {"_id": ObjectId(patient_id)}
-    )
+    try:
+        result = patients_collection.delete_one({"_id": ObjectId(patient_id)})
+    except PyMongoError as exc:
+        logger.exception("Unable to delete patient")
+        raise HTTPException(
+            status_code=503,
+            detail="Patient service is temporarily unavailable",
+        ) from exc
+
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
     return {
         "message": "Patient deleted successfully",
-        "patient_id": patient_id
+        "patient_id": patient_id,
     }
