@@ -10,7 +10,7 @@ from database.connection import patients_collection
 from model.symptom_model import create_symptom, get_patient_symptoms
 
 logger = logging.getLogger(__name__)
-path2 = APIRouter()
+symptom_router = APIRouter()
 
 
 def _require_patient(patient_id: str) -> None:
@@ -33,7 +33,7 @@ def _require_patient(patient_id: str) -> None:
         raise HTTPException(status_code=404, detail="Patient not found")
 
 
-@path2.post("/symptoms/submit")
+@symptom_router.post("/symptoms/submit")
 def submit_symptoms(symptoms: symtomsinfo):
     symptom_data = symptoms.model_dump()
     _require_patient(symptom_data["patient_id"])
@@ -55,7 +55,7 @@ def submit_symptoms(symptoms: symtomsinfo):
     }
 
 
-@path2.get("/retrieve")
+@symptom_router.get("/retrieve")
 def get_symptom_history(patient_id: str):
     _require_patient(patient_id)
 

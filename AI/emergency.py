@@ -1,1 +1,1 @@
-print("this is uswed for checking the seviarity of the problem")
+"""Reserved for future emergency triage rules."""
