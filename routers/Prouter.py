@@ -8,10 +8,10 @@ from SCHEMA.pcreate_schema import pcreate, pupdate
 from database.connection import patients_collection
 
 logger = logging.getLogger(__name__)
-patient_router = APIRouter()
+path = APIRouter()
 
 
-@patient_router.get("/profile/{patient_id}")
+@path.get("/profile/{patient_id}")
 def get_patient(patient_id: str):
     if not ObjectId.is_valid(patient_id):
         raise HTTPException(status_code=400, detail="Invalid patient ID")
@@ -32,7 +32,7 @@ def get_patient(patient_id: str):
     return patient
 
 
-@patient_router.post("/create")
+@path.post("/create")
 def create(patient: pcreate):
     patient_data = patient.model_dump()
     try:
@@ -40,7 +40,7 @@ def create(patient: pcreate):
     except PyMongoError as exc:
         logger.exception("Unable to register patient")
         raise HTTPException(
-            status_code=503,
+            status_code=503, 
             detail="Patient service is temporarily unavailable",
         ) from exc
 
@@ -51,7 +51,7 @@ def create(patient: pcreate):
     }
 
 
-@patient_router.patch("/profile/{patient_id}")
+@path.patch("/profile/{patient_id}")
 def update_patient(patient_id: str, patient: pupdate):
     if not ObjectId.is_valid(patient_id):
         raise HTTPException(status_code=400, detail="Invalid patient ID")
@@ -78,7 +78,7 @@ def update_patient(patient_id: str, patient: pupdate):
     }
 
 
-@patient_router.delete("/delete/{patient_id}")
+@path.delete("/delete/{patient_id}")
 def delete_patient(patient_id: str):
     if not ObjectId.is_valid(patient_id):
         raise HTTPException(status_code=400, detail="Invalid patient ID")

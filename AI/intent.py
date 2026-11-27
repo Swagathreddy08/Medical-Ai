@@ -1,1 +1,1 @@
-"""Reserved for future request classification."""
+print("this is for calification of the data type like medical,programing etc")

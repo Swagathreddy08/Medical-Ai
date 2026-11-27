@@ -1,1 +1,1 @@
-"""Reserved for future emergency triage rules."""
+print("this is uswed for checking the seviarity of the problem")
